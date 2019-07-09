@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 
 #include <glib.h>
 #include <glib-object.h>
@@ -102,6 +103,16 @@ static void on_gathering_done_cb(NiceAgent * agent, guint stream_id, gpointer us
     printf("\nFull local SDP:\n");
     gchar * full_sdp = nice_agent_generate_local_sdp(agent);
     printf("%s\n", full_sdp);
+    int local_sdp_fd = open("local_sdp.txt", O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP);
+    if (local_sdp_fd > 0)
+    {
+        write(local_sdp_fd, full_sdp, strlen(full_sdp));
+        close(local_sdp_fd);
+    }
+    else
+    {
+        fprintf(stderr, "Failed to open local sdp file: %s\n", strerror(errno));
+    }
     g_free(full_sdp);
 
     sdp_file_check_timer = g_timeout_source_new(500);
